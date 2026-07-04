@@ -1,6 +1,6 @@
 import pygame as P
 import sys
-from Chess_engine import create_board
+from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves
 
 WIDTH=512
 HEIGHT=512
@@ -44,7 +44,7 @@ def draw_pieces(screen,board,my_dict):
 
 #Create the function to draw the highlights
 
-def draw_highlights(screen,current_selected):
+def draw_highlights(screen,current_selected,valid_moves):
     highlight=(246, 246, 105)
     if(current_selected==None):
         return None
@@ -53,6 +53,10 @@ def draw_highlights(screen,current_selected):
         pixelX=col*SQ_SIZE
         pixelY=row*SQ_SIZE
         P.draw.rect(screen,highlight,(pixelX,pixelY,SQ_SIZE,SQ_SIZE))
+        for move in valid_moves:
+            end_row=move[2]
+            end_col=move[3]
+            P.draw.rect(screen,(0,255,0),(end_col*SQ_SIZE,end_row*SQ_SIZE,SQ_SIZE,SQ_SIZE),4)
 
 
 
@@ -67,6 +71,7 @@ def main():
     images=load_image()
     click_history_list=[]
     move_history=[]
+    valid_moves=[]
     current_selected=None
     track_turn=True
     while True:
@@ -89,6 +94,16 @@ def main():
                         current_selected=click
                         if((track_turn==True and piece[0]=="w") or track_turn==False and piece[0]=="b"):
                             current_selected=click
+                            if(piece[1]=="P"):
+                                valid_moves=get_pawn_moves(board,row,col)
+                            elif(piece[1]=="R"):
+                                valid_moves=get_rook_moves(board,row,col)
+                            elif(piece[1]=="B"):
+                                valid_moves=get_bishop_moves(board,row,col)
+                            elif(piece[1]=="Q"):
+                                valid_moves=get_queen_moves(board,row,col)
+                            else:
+                                valid_moves=[]
                         else:
                             click_history_list=[]
 
@@ -99,16 +114,18 @@ def main():
                     start_col=col_0
                     end_row=row_1
                     end_col=col_1
-                    piece=board[start_row][start_col]
-                    captured_piece=board[end_row][end_col]
-                    board[end_row][end_col]=piece
-                    board[start_row][start_col]="--"
-                    newtuple=(start_row,start_col,end_row,end_col,piece,captured_piece)
-                    move_history.append(newtuple)
+                    if((start_row,start_col,end_row,end_col) in valid_moves):
+                        piece=board[start_row][start_col]
+                        captured_piece=board[end_row][end_col]
+                        board[end_row][end_col]=piece
+                        board[start_row][start_col]="--"
+                        newtuple=(start_row,start_col,end_row,end_col,piece,captured_piece)
+                        move_history.append(newtuple)
+                    valid_moves=[]
                     current_selected=None
                     click_history_list=[]
                     track_turn=not track_turn
-            if(event.type==P.KEYDOWN):
+            if(event.type==P.KEYDOWN):#This checks the undo part 
                 if(event.key==P.K_z):
                     if((move_history)!=0):
                         last_move=move_history.pop()
@@ -120,7 +137,7 @@ def main():
 
         
         draw_board(screen)
-        draw_highlights(screen,current_selected)
+        draw_highlights(screen,current_selected,valid_moves)
         draw_pieces(screen,board,images)
         P.display.flip()
         clock.tick(FPS)
