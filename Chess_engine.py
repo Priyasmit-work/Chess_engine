@@ -104,14 +104,105 @@ def get_queen_moves(board,row,col):
       return move
 
 
+def get_knight_moves(board,row,col):
+     move=[]
+     piece=board[row][col]
+     directions=[(+2,-1),(+2,+1),(+1,+2),(-1,+2),(+1,-2),(-1,-2),(-2,-1),(-2,+1)]
+     for direction in directions:
+          travel_row=row+direction[0]
+          travel_col=col+direction[1]
+          if( 0 <= travel_row <= 7 and 0 <= travel_col <= 7):
+               if(board[travel_row][travel_col] == "--" or  board[travel_row][travel_col][0] != piece[0]):
+                    move.append((row,col,travel_row,travel_col))
+    
+     return move
 
 
-                
+def get_king_moves(board,row,col):
+     move=[]
+     piece=board[row][col]
+     directions=[(-1,0),(+1,0),(0,-1),(0,+1),(-1,-1),(+1,+1),(-1,+1),(+1,-1)]
+     for direction in directions:
+          travel_row=row+direction[0]
+          travel_col=col+direction[1]
+          if( 0 <= travel_row <= 7 and 0 <= travel_col <= 7):
+               if(board[travel_row][travel_col] == "--" or  board[travel_row][travel_col][0] != piece[0]):
+                    move.append((row,col,travel_row,travel_col))
+     return move
 
-                
-                
-        
-        
 
-                           
-        
+def get_all_moves(board,color):
+     moves=[]
+     for i in range(0,8):
+          for j in range(0,8):
+               piece=board[i][j]
+               if(piece=="--" or piece[0]!= color):
+                    continue
+               if(piece[1]=="P"):
+                    moves.extend(get_pawn_moves(board,i,j))
+               elif(piece[1]=="R"):
+                    moves.extend(get_rook_moves(board,i,j))
+               elif(piece[1]=="Q"):
+                    moves.extend(get_queen_moves(board,i,j))
+               elif(piece[1]=="B"):
+                    moves.extend(get_bishop_moves(board,i,j))
+               elif(piece[1]=="N"):
+                    moves.extend(get_knight_moves(board,i,j))
+               elif(piece[1]=="K"):
+                    moves.extend(get_king_moves(board,i,j))
+     return moves
+
+
+def is_in_check(board,color):
+    for i in range(0,8):
+        for j in range(0,8):
+            piece=board[i][j]
+            if(piece[0]==color and piece[1]=="K"):
+                position=(i,j)
+    opponent_color="b" if color=="w" else "w"
+    get_moves=get_all_moves(board,opponent_color)
+    for moves in get_moves:
+        if(position == (moves[2], moves[3])):
+            return True
+    return False
+
+def get_legal_moves(board,row,col,color):
+    candidate_moves=[]
+    piece=board[row][col]
+    if(piece[1]=="P"):
+        candidate_moves=get_pawn_moves(board,row,col)
+    elif(piece[1]=="R"):
+        candidate_moves=get_rook_moves(board,row,col)
+    elif(piece[1]=="B"):
+        candidate_moves=get_bishop_moves(board,row,col)
+    elif(piece[1]=="Q"):
+        candidate_moves=get_queen_moves(board,row,col)
+    elif(piece[1]=="N"):
+        candidate_moves=get_knight_moves(board,row,col)
+    elif(piece[1]=="K"):
+        candidate_moves=get_king_moves(board,row,col)
+    else:
+        candidate_moves=[]
+    legal_moves=[]
+    for moves in candidate_moves:
+          (start_row,start_col,end_row,end_col)=moves 
+          saved_piece=board[end_row][end_col]
+          board[end_row][end_col]=board[start_row][start_col]
+          board[start_row][start_col]="--"
+          if(is_in_check(board,piece[0])==False):
+               legal_moves.append(moves)
+          board[end_row][end_col]=board[start_row][start_col]
+          board[end_row][end_col]=saved_piece
+    return legal_moves
+
+
+def find_king(board,color):
+     for i in range(0,8):
+        for j in range(0,8):
+            piece=board[i][j]
+            if(piece[0]==color and piece[1]=="K"):
+                position=(i,j)
+            
+     return position
+
+

@@ -1,6 +1,6 @@
 import pygame as P
 import sys
-from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves
+from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king
 
 WIDTH=512
 HEIGHT=512
@@ -44,7 +44,7 @@ def draw_pieces(screen,board,my_dict):
 
 #Create the function to draw the highlights
 
-def draw_highlights(screen,current_selected,valid_moves):
+def draw_highlights(screen,current_selected,valid_moves,in_check_position):
     highlight=(246, 246, 105)
     if(current_selected==None):
         return None
@@ -57,7 +57,12 @@ def draw_highlights(screen,current_selected,valid_moves):
             end_row=move[2]
             end_col=move[3]
             P.draw.rect(screen,(0,255,0),(end_col*SQ_SIZE,end_row*SQ_SIZE,SQ_SIZE,SQ_SIZE),4)
+    if(in_check_position!=None):
+            (check_row,check_col)=in_check_position
+            P.draw.rect(screen,(220, 20, 20),(check_col*SQ_SIZE,check_row*SQ_SIZE,SQ_SIZE,SQ_SIZE),4)
+        
 
+    
 
 
 #Create def main to run the and test the app 
@@ -74,6 +79,8 @@ def main():
     valid_moves=[]
     current_selected=None
     track_turn=True
+    in_check_position=None
+
     while True:
         for event in P.event.get():
             if event.type==P.QUIT:
@@ -102,10 +109,15 @@ def main():
                                 valid_moves=get_bishop_moves(board,row,col)
                             elif(piece[1]=="Q"):
                                 valid_moves=get_queen_moves(board,row,col)
+                            elif(piece[1]=="N"):
+                                valid_moves=get_knight_moves(board,row,col)
+                            elif(piece[1]=="K"):
+                                valid_moves=get_king_moves(board,row,col)
                             else:
                                 valid_moves=[]
                         else:
                             click_history_list=[]
+                            current_selected=None
 
                 if(len(click_history_list)==2):
                     (row_0,col_0)=click_history_list[0]
@@ -121,10 +133,20 @@ def main():
                         board[start_row][start_col]="--"
                         newtuple=(start_row,start_col,end_row,end_col,piece,captured_piece)
                         move_history.append(newtuple)
+                        track_turn=not track_turn
+                        if(track_turn==True):
+                            color_string="w"
+                        else:
+                            color_string="b"
+                        if(is_in_check(board,color_string)==True):
+                            in_check_position=find_king(board,color_string)
+                        else:
+                            in_check_position=None
+                        
+
                     valid_moves=[]
                     current_selected=None
                     click_history_list=[]
-                    track_turn=not track_turn
             if(event.type==P.KEYDOWN):#This checks the undo part 
                 if(event.key==P.K_z):
                     if((move_history)!=0):
@@ -137,7 +159,7 @@ def main():
 
         
         draw_board(screen)
-        draw_highlights(screen,current_selected,valid_moves)
+        draw_highlights(screen,current_selected,valid_moves,in_check_position)
         draw_pieces(screen,board,images)
         P.display.flip()
         clock.tick(FPS)
