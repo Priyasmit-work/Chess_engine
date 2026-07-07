@@ -1,6 +1,6 @@
 import pygame as P
 import sys
-from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king
+from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king,get_legal_moves
 
 WIDTH=512
 HEIGHT=512
@@ -46,9 +46,7 @@ def draw_pieces(screen,board,my_dict):
 
 def draw_highlights(screen,current_selected,valid_moves,in_check_position):
     highlight=(246, 246, 105)
-    if(current_selected==None):
-        return None
-    else:
+    if(current_selected!=None):
         (row,col)=current_selected
         pixelX=col*SQ_SIZE
         pixelY=row*SQ_SIZE
@@ -62,6 +60,15 @@ def draw_highlights(screen,current_selected,valid_moves,in_check_position):
             P.draw.rect(screen,(220, 20, 20),(check_col*SQ_SIZE,check_row*SQ_SIZE,SQ_SIZE,SQ_SIZE),4)
         
 
+def draw_fonts(screen,font):
+    files=["a","b","c","d","e","f","g","h"]
+    rank=["8","7","6","5","4","3","2","1"]
+    for i in range(0,8):
+        label=font.render(files[i],True,(0,0,0))
+        screen.blit(label,(i*SQ_SIZE+SQ_SIZE-18,HEIGHT-18))
+        label=font.render(rank[i],True,(0,0,0))
+        screen.blit(label,(2,i*SQ_SIZE+2))    
+
     
 
 
@@ -72,6 +79,7 @@ def main():
     screen=P.display.set_mode((WIDTH,HEIGHT))
     P.display.set_caption("Chess Engine")
     clock=P.time.Clock()
+    font=P.font.SysFont("Arial",16,bold=True)
     board=create_board()
     images=load_image()
     click_history_list=[]
@@ -80,6 +88,7 @@ def main():
     current_selected=None
     track_turn=True
     in_check_position=None
+    en_passant_square=None
 
     while True:
         for event in P.event.get():
@@ -101,20 +110,7 @@ def main():
                         current_selected=click
                         if((track_turn==True and piece[0]=="w") or track_turn==False and piece[0]=="b"):
                             current_selected=click
-                            if(piece[1]=="P"):
-                                valid_moves=get_pawn_moves(board,row,col)
-                            elif(piece[1]=="R"):
-                                valid_moves=get_rook_moves(board,row,col)
-                            elif(piece[1]=="B"):
-                                valid_moves=get_bishop_moves(board,row,col)
-                            elif(piece[1]=="Q"):
-                                valid_moves=get_queen_moves(board,row,col)
-                            elif(piece[1]=="N"):
-                                valid_moves=get_knight_moves(board,row,col)
-                            elif(piece[1]=="K"):
-                                valid_moves=get_king_moves(board,row,col)
-                            else:
-                                valid_moves=[]
+                            valid_moves = get_legal_moves(board, row, col, piece[0],en_passant_square)
                         else:
                             click_history_list=[]
                             current_selected=None
@@ -130,6 +126,17 @@ def main():
                         piece=board[start_row][start_col]
                         captured_piece=board[end_row][end_col]
                         board[end_row][end_col]=piece
+                        if(piece[1]=="P" and (end_row,end_col)==en_passant_square):
+                            if(piece[0]=="w"):
+                                board[end_row+1][end_col]="--"
+                            if(piece[0]=="b"):
+                                board[end_row-1][end_col]="--"
+                        
+                        if(piece[1]=="P" and abs(end_row-start_row)==2):
+                            en_passant_square=((start_row+end_row)//2,end_col)
+                        else:
+                            en_passant_square=None
+                        
                         board[start_row][start_col]="--"
                         newtuple=(start_row,start_col,end_row,end_col,piece,captured_piece)
                         move_history.append(newtuple)
@@ -160,6 +167,7 @@ def main():
         
         draw_board(screen)
         draw_highlights(screen,current_selected,valid_moves,in_check_position)
+        draw_fonts(screen,font)
         draw_pieces(screen,board,images)
         P.display.flip()
         clock.tick(FPS)

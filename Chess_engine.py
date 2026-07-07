@@ -10,7 +10,7 @@ def create_board():
 
 #Create a function that get the pawns move 
 
-def get_pawn_moves(board,row,col):
+def get_pawn_moves(board,row,col,en_passant_square=None):
         move=[]
         piece=board[row][col]
         if(piece[0]=="w"):
@@ -42,6 +42,19 @@ def get_pawn_moves(board,row,col):
                         move.append((row,col,row+move_direction,col+1))
                     if piece[0] == "b" and board[row+move_direction][col+1][0] == "w":
                         move.append((row, col, row+move_direction, col+1))
+        if (en_passant_square is not None):
+             (ep_row,ep_col)=en_passant_square
+             if(piece[0]=="w"):
+                  if (row ==3 and (ep_row,ep_col)==(row-1,col-1)):
+                       move.append((row,col,ep_row,ep_col))
+                  if(row == 3 and (ep_row,ep_col)==(row-1,col+1)):
+                       move.append(row,col,ep_row,ep_col)
+             if(piece[0]=="b"):
+                  if (row ==4 and (ep_row,ep_col)==(row+1,col-1)):
+                       move.append((row,col,ep_row,ep_col))
+                  if(row == 4 and (ep_row,ep_col)==(row+1,col+1)):
+                       move.append(row,col,ep_row,ep_col)
+                  
         return move
 
 def get_rook_moves(board, row, col):
@@ -166,11 +179,11 @@ def is_in_check(board,color):
             return True
     return False
 
-def get_legal_moves(board,row,col,color):
+def get_legal_moves(board,row,col,color,en_passant_square=None):
     candidate_moves=[]
     piece=board[row][col]
     if(piece[1]=="P"):
-        candidate_moves=get_pawn_moves(board,row,col)
+        candidate_moves=get_pawn_moves(board,row,col,en_passant_square)
     elif(piece[1]=="R"):
         candidate_moves=get_rook_moves(board,row,col)
     elif(piece[1]=="B"):
@@ -191,7 +204,7 @@ def get_legal_moves(board,row,col,color):
           board[start_row][start_col]="--"
           if(is_in_check(board,piece[0])==False):
                legal_moves.append(moves)
-          board[end_row][end_col]=board[start_row][start_col]
+          board[start_row][start_col]=board[end_row][end_col]
           board[end_row][end_col]=saved_piece
     return legal_moves
 
@@ -204,5 +217,6 @@ def find_king(board,color):
                 position=(i,j)
             
      return position
+
 
 
