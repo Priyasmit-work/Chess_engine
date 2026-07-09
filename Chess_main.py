@@ -89,6 +89,13 @@ def main():
     track_turn=True
     in_check_position=None
     en_passant_square=None
+    castling_rights={"white_king_move": False,
+           "black_king_move":False,
+           "white_kingside_rook_move": False,
+           "white_queenside_rook_move":False,
+           "black_kingside_rook_move":False,
+           "black_queenside_rook_move":False}
+
 
     while True:
         for event in P.event.get():
@@ -110,7 +117,7 @@ def main():
                         current_selected=click
                         if((track_turn==True and piece[0]=="w") or track_turn==False and piece[0]=="b"):
                             current_selected=click
-                            valid_moves = get_legal_moves(board, row, col, piece[0],en_passant_square)
+                            valid_moves = get_legal_moves(board, row, col, piece[0],en_passant_square,castling_rights)
                         else:
                             click_history_list=[]
                             current_selected=None
@@ -126,18 +133,38 @@ def main():
                         piece=board[start_row][start_col]
                         captured_piece=board[end_row][end_col]
                         board[end_row][end_col]=piece
+                        board[start_row][start_col] = "--"
                         if(piece[1]=="P" and (end_row,end_col)==en_passant_square):
                             if(piece[0]=="w"):
                                 board[end_row+1][end_col]="--"
                             if(piece[0]=="b"):
                                 board[end_row-1][end_col]="--"
+                        if (piece[1] == "K" and abs(end_col - start_col) == 2):
+                            if(end_col>start_col):
+                                    board[start_row][5]=board[start_row][7]
+                                    board[start_row][7]="--"
+                            else:
+                                    board[start_row][3]=board[start_row][0]
+                                    board[start_row][0]="--"
+
                         
                         if(piece[1]=="P" and abs(end_row-start_row)==2):
                             en_passant_square=((start_row+end_row)//2,end_col)
                         else:
                             en_passant_square=None
-                        
-                        board[start_row][start_col]="--"
+                        if piece == "wK":
+                            castling_rights["white_king_moved"] = True
+                        elif piece == "wR" and start_col == 7:
+                            castling_rights["white_kingside_rook_moved"] = True
+                        elif piece == "wR" and start_col == 0:
+                            castling_rights["white_queenside_rook_moved"] = True
+                        elif piece == "bK":
+                                castling_rights["black_king_moved"] = True
+                        elif piece == "bR" and start_col == 7:
+                                castling_rights["black_kingside_rook_moved"] = True
+                        elif piece == "bR" and start_col == 0:
+                                castling_rights["black_queenside_rook_moved"] = True
+        
                         newtuple=(start_row,start_col,end_row,end_col,piece,captured_piece)
                         move_history.append(newtuple)
                         track_turn=not track_turn
