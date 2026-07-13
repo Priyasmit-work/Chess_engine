@@ -18,6 +18,8 @@ def get_pawn_moves(board,row,col,en_passant_square=None):
         else:
                 move_direction= +1
         next_row=row+move_direction
+        if not(0<=next_row<=7):
+             return move           
         if(board[next_row][col]=="--"):
                 move.append((row,col,next_row,col))
 

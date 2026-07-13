@@ -69,6 +69,23 @@ def draw_fonts(screen,font):
         label=font.render(rank[i],True,(0,0,0))
         screen.blit(label,(2,i*SQ_SIZE+2))    
 
+
+def draw_promotion(screen,images,color):
+    if color=="w":
+        choices=["wQ","wR","wN","wB"]
+    else:
+        choices=["bQ","bR","bN","bB"]
+    box_x=WIDTH//2-SQ_SIZE*2
+    box_y=HEIGHT//2-SQ_SIZE//2
+    P.draw.rect(screen, (50,50,50), (box_x-5, box_y-5, SQ_SIZE*4+10, SQ_SIZE+10))
+    for i in range(len(choices)):
+        piece=choices[i]
+        x=box_x+i*SQ_SIZE
+        y=box_y
+        P.draw.rect(screen,(255,255,255),(x,y,SQ_SIZE,SQ_SIZE))
+        screen.blit(images[piece],(x,y))
+
+
     
 
 
@@ -95,6 +112,9 @@ def main():
            "white_queenside_rook_move":False,
            "black_kingside_rook_move":False,
            "black_queenside_rook_move":False}
+    promotion_pawn_position=False
+    promotion_pending=False
+    promotion_color=False
 
 
     while True:
@@ -103,6 +123,23 @@ def main():
                 P.quit()
                 sys.exit()
             if(event.type==P.MOUSEBUTTONDOWN):
+                if promotion_pending==True:
+                    (X,Y)=event.pos
+                    box_x=WIDTH//2 - SQ_SIZE*2
+                    box_y=HEIGHT//2 - SQ_SIZE//2
+                    if box_x <= X <= box_x + SQ_SIZE*4 and box_y <= Y <= box_y + SQ_SIZE:
+                        i = (X - box_x) // SQ_SIZE
+                        if promotion_color == "w":
+                            choices = ["wQ","wR","wN","wB"]
+                        else:
+                            choices = ["bQ","bR","bN","bB"]
+                        chosen_piece = choices[i]
+                        (prom_row, prom_col) = promotion_pawn_position
+                        board[prom_row][prom_col] = chosen_piece
+                        promotion_pending = False
+                        promotion_pawn_position = None
+                        promotion_color = None
+                        continue
                 get_position=event.pos
                 (X,Y)=get_position
                 row=Y//SQ_SIZE
@@ -134,6 +171,8 @@ def main():
                         captured_piece=board[end_row][end_col]
                         board[end_row][end_col]=piece
                         board[start_row][start_col] = "--"
+
+#----------------------------------------------------------------------------------------------------#
                         if(piece[1]=="P" and (end_row,end_col)==en_passant_square):
                             if(piece[0]=="w"):
                                 board[end_row+1][end_col]="--"
@@ -146,12 +185,20 @@ def main():
                             else:
                                     board[start_row][3]=board[start_row][0]
                                     board[start_row][0]="--"
-
+                        if(piece[1]=="P" and piece[0]=="w" and end_row==0):
+                            promotion_pending=True
+                            promotion_pawn_position=(end_row,end_col)
+                            promotion_color="w"
+                        elif(piece[1]=="P" and piece[0]=="b" and end_row==7):
+                            promotion_pending=True
+                            promotion_pawn_position=(end_row,end_col)
+                            promotion_color="b"
                         
                         if(piece[1]=="P" and abs(end_row-start_row)==2):
                             en_passant_square=((start_row+end_row)//2,end_col)
                         else:
                             en_passant_square=None
+#----------------------------------------------------------------------------------------------#This is the move part
                         if piece == "wK":
                             castling_rights["white_king_moved"] = True
                         elif piece == "wR" and start_col == 7:
@@ -164,6 +211,7 @@ def main():
                                 castling_rights["black_kingside_rook_moved"] = True
                         elif piece == "bR" and start_col == 0:
                                 castling_rights["black_queenside_rook_moved"] = True
+                        
         
                         newtuple=(start_row,start_col,end_row,end_col,piece,captured_piece)
                         move_history.append(newtuple)
@@ -196,6 +244,8 @@ def main():
         draw_highlights(screen,current_selected,valid_moves,in_check_position)
         draw_fonts(screen,font)
         draw_pieces(screen,board,images)
+        if(promotion_pending):
+            draw_promotion(screen,images,promotion_color)
         P.display.flip()
         clock.tick(FPS)
 main()
