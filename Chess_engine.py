@@ -246,6 +246,31 @@ def find_king(board,color):
      return position
 
 
+def is_checkmate(board,color):
+     if is_in_check(board,color)==False:
+          return False
+     for i in range(0,8):
+          for j in range(0,8):
+               piece=board[i][j]
+               if piece!="--" and piece[0]==color:
+                    moves=get_legal_moves(board,i,j,color)
+                    if len(moves)>0:
+                         return False
+     return True
+
+
+def is_stalemate(board,color):
+     if is_in_check(board,color)==True:
+          return False
+     for i in range(0,8):
+          for j in range(0,8):
+               piece=board[i][j]
+               if piece!="--" and piece[0]==color:
+                    moves=get_legal_moves(board,i,j,color)
+                    if len(moves)>0:
+                         return False
+     return True
+
 
 
 

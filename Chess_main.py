@@ -1,6 +1,6 @@
 import pygame as P
 import sys
-from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king,get_legal_moves
+from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king,get_legal_moves,is_checkmate,is_stalemate
 
 WIDTH=512
 HEIGHT=512
@@ -86,6 +86,31 @@ def draw_promotion(screen,images,color):
         screen.blit(images[piece],(x,y))
 
 
+
+
+def draw_game_over(screen, message, font):
+    # dark overlay
+    overlay = P.Surface((WIDTH, HEIGHT))
+    overlay.set_alpha(150)
+    overlay.fill((0, 0, 0))
+    screen.blit(overlay, (0, 0))
+    
+    # message text
+    big_font = P.font.SysFont("Arial", 32, bold=True)
+    small_font = P.font.SysFont("Arial", 20)
+    
+    text = big_font.render(message, True, (255, 255, 255))
+    restart = small_font.render("Press R to restart", True, (255, 255, 0))
+    
+    # center on screen
+    text_x = WIDTH//2 - text.get_width()//2
+    text_y = HEIGHT//2 - 40
+    restart_x = WIDTH//2 - restart.get_width()//2
+    restart_y = HEIGHT//2 + 10
+    
+    screen.blit(text, (text_x, text_y))
+    screen.blit(restart, (restart_x, restart_y))
+
     
 
 
@@ -115,6 +140,8 @@ def main():
     promotion_pawn_position=False
     promotion_pending=False
     promotion_color=False
+    game_over=False
+    game_over_message=""
 
 
     while True:
@@ -123,6 +150,8 @@ def main():
                 P.quit()
                 sys.exit()
             if(event.type==P.MOUSEBUTTONDOWN):
+                if game_over:
+                    pass
                 if promotion_pending==True:
                     (X,Y)=event.pos
                     box_x=WIDTH//2 - SQ_SIZE*2
@@ -225,6 +254,16 @@ def main():
                         else:
                             in_check_position=None
                         
+                        if is_checkmate(board, color_string):
+                            game_over = True
+                            if color_string == "w":
+                                game_over_message = "Black Wins by Checkmate!"
+                            else:
+                                game_over_message = "White Wins by Checkmate!"
+
+                        elif is_stalemate(board, color_string):
+                            game_over = True
+                            game_over_message = "Stalemate! It's a Draw!"
 
                     valid_moves=[]
                     current_selected=None
@@ -236,6 +275,28 @@ def main():
                         (start_row,start_col,end_row,end_col,piece,captured_piece) = last_move
                         board[end_row][end_col]=captured_piece
                         board[start_row][start_col]=piece
+                if event.key == P.K_r and game_over:
+                    board = create_board()
+                    click_history_list = []
+                    move_history = []
+                    valid_moves = []
+                    current_selected = None
+                    track_turn = True
+                    in_check_position = None
+                    en_passant_square = None
+                    game_over = False
+                    game_over_message = ""
+                    promotion_pending = False
+                    promotion_color = None
+                    castling_rights = {
+                        "white_king_moved"          : False,
+                        "white_kingside_rook_moved" : False,
+                        "white_queenside_rook_moved": False,
+                        "black_king_moved"          : False,
+                        "black_kingside_rook_moved" : False,
+                        "black_queenside_rook_moved": False,
+                    }
+
 
 
 
@@ -246,6 +307,8 @@ def main():
         draw_pieces(screen,board,images)
         if(promotion_pending):
             draw_promotion(screen,images,promotion_color)
+        if game_over:
+            draw_game_over(screen, game_over_message, font)
         P.display.flip()
         clock.tick(FPS)
 main()
