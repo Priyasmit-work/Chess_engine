@@ -1,6 +1,6 @@
 import pygame as P
 import sys
-from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king,get_legal_moves,is_checkmate,is_stalemate
+from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king,get_legal_moves,is_checkmate,is_stalemate,get_random_moves
 
 WIDTH=512
 HEIGHT=512
@@ -131,12 +131,12 @@ def main():
     track_turn=True
     in_check_position=None
     en_passant_square=None
-    castling_rights={"white_king_move": False,
-           "black_king_move":False,
-           "white_kingside_rook_move": False,
-           "white_queenside_rook_move":False,
-           "black_kingside_rook_move":False,
-           "black_queenside_rook_move":False}
+    castling_rights={"white_king_moved": False,
+           "black_king_moved":False,
+           "white_kingside_rook_moved": False,
+           "white_queenside_rook_moved":False,
+           "black_kingside_rook_moved":False,
+           "black_queenside_rook_moved":False}
     promotion_pawn_position=False
     promotion_pending=False
     promotion_color=False
@@ -244,9 +244,9 @@ def main():
         
                         newtuple=(start_row,start_col,end_row,end_col,piece,captured_piece)
                         move_history.append(newtuple)
-                        track_turn=not track_turn
-                        if(track_turn==True):
-                            color_string="w"
+                        track_turn=not track_turn  
+                        if(track_turn)==True:
+                             color_string="w"
                         else:
                             color_string="b"
                         if(is_in_check(board,color_string)==True):
@@ -263,7 +263,7 @@ def main():
 
                         elif is_stalemate(board, color_string):
                             game_over = True
-                            game_over_message = "Stalemate! It's a Draw!"
+                            game_over_message = "Stalemate! It's a Draw!"         #This is track turn of the white and black
 
                     valid_moves=[]
                     current_selected=None
@@ -296,10 +296,62 @@ def main():
                         "black_kingside_rook_moved" : False,
                         "black_queenside_rook_moved": False,
                     }
+        if(track_turn==False and not game_over):
+            ai_move = get_random_moves(board, "b",en_passant_square,castling_rights)
+            if ai_move is not None:
+                (start_row, start_col, end_row, end_col) = ai_move
+                piece=board[start_row][start_col]
+                captured_piece=board[end_row][end_col]
+                board[end_row][end_col]=piece
+                board[start_row][start_col] = "--"
+                if piece[1] == "P" and (end_row, end_col) == en_passant_square:
+                    if piece[0] == "b":
+                        board[end_row-1][end_col] = "--"
 
+            # castling
+                if piece[1] == "K" and abs(end_col - start_col) == 2:
+                    if end_col > start_col:
+                        board[start_row][5] = board[start_row][7]
+                        board[start_row][7] = "--"
+                    else:
+                        board[start_row][3] = board[start_row][0]
+                        board[start_row][0] = "--"
 
+                # pawn promotion - auto queen for AI
+                if piece[1] == "P" and end_row == 7:
+                    board[end_row][end_col] = "bQ"
 
+                # update en passant
+                if piece[1] == "P" and abs(end_row - start_row) == 2:
+                    en_passant_square = ((start_row+end_row)//2, end_col)
+                else:
+                    en_passant_square = None
 
+                # update castling rights
+                if piece == "bK":
+                    castling_rights["black_king_moved"] = True
+                elif piece == "bR" and start_col == 7:
+                    castling_rights["black_kingside_rook_moved"] = True
+                elif piece == "bR" and start_col == 0:
+                    castling_rights["black_queenside_rook_moved"] = True
+
+                # switch turn back to white
+                track_turn = True
+
+                # check detection
+                if is_in_check(board, "w"):
+                    in_check_position = find_king(board, "w")
+                else:
+                    in_check_position = None
+
+                # checkmate and stalemate
+                if is_checkmate(board, "w"):
+                    game_over = True
+                    game_over_message = "Black Wins by Checkmate!"
+                elif is_stalemate(board, "w"):
+                    game_over = True
+                    game_over_message = "Stalemate! Draw!"
+        
         
         draw_board(screen)
         draw_highlights(screen,current_selected,valid_moves,in_check_position)

@@ -145,24 +145,24 @@ def get_king_moves(board, row, col, castling_rights=None):
                 move.append((row, col, travel_row, travel_col))
 
     if (piece[0] == "w" and castling_rights is not None):
-        if (not castling_rights["white_king_move"] and
-            not castling_rights["white_kingside_rook_move"] and
+        if (not castling_rights["white_king_moved"] and
+            not castling_rights["white_kingside_rook_moved"] and
             board[7][5] == "--" and board[7][6] == "--"):
             move.append((row, col, row, col+2))
-        if (not castling_rights["white_king_move"] and
-            not castling_rights["white_queenside_rook_move"] and
+        if (not castling_rights["white_king_moved"] and
+            not castling_rights["white_queenside_rook_moved"] and
             board[7][1] == "--" and
             board[7][2] == "--" and
             board[7][3] == "--"):
             move.append((row, col, row, col-2))
 
     if (piece[0] == "b" and castling_rights is not None):
-        if (not castling_rights["black_king_move"] and
-            not castling_rights["black_kingside_rook_move"] and
+        if (not castling_rights["black_king_moved"] and
+            not castling_rights["black_kingside_rook_moved"] and
             board[0][5] == "--" and board[0][6] == "--"):
             move.append((row, col, row, col+2))
-        if (not castling_rights["black_king_move"] and
-            not castling_rights["black_queenside_rook_move"] and
+        if (not castling_rights["black_king_moved"] and
+            not castling_rights["black_queenside_rook_moved"] and
             board[0][1] == "--" and
             board[0][2] == "--" and
             board[0][3] == "--"):
@@ -171,7 +171,7 @@ def get_king_moves(board, row, col, castling_rights=None):
     return move
 
 
-def get_all_moves(board,color):
+def get_all_moves(board,color,castling_rights):
      moves=[]
      for i in range(0,8):
           for j in range(0,8):
@@ -189,7 +189,7 @@ def get_all_moves(board,color):
                elif(piece[1]=="N"):
                     moves.extend(get_knight_moves(board,i,j))
                elif(piece[1]=="K"):
-                    moves.extend(get_king_moves(board,i,j))
+                    moves.extend(get_king_moves(board,i,j,castling_rights))
      return moves
 
 
@@ -200,7 +200,7 @@ def is_in_check(board,color):
             if(piece!= "--" and piece[0]==color and piece[1]=="K"):
                 position=(i,j)
     opponent_color="b" if color=="w" else "w"
-    get_moves=get_all_moves(board,opponent_color)
+    get_moves=get_all_moves(board,opponent_color,None)
     for moves in get_moves:
         if(position == (moves[2], moves[3])):
             return True
@@ -270,6 +270,21 @@ def is_stalemate(board,color):
                     if len(moves)>0:
                          return False
      return True
+#------------------------AI------------------------------------------------------------------------------------
+
+import random
+
+def get_random_moves(board,color,en_passant_square=None,castling_rights=None):
+     all_legal_moves=[]
+     for i in range(0,8):
+          for j in range(0,8):
+               piece=board[i][j]
+               if piece!="--" and piece[0]==color:
+                    moves=get_legal_moves(board,i,j,color,en_passant_square,castling_rights)
+                    all_legal_moves.extend(moves)
+     if(len(all_legal_moves)==0):
+          return None
+     return random.choice(all_legal_moves)
 
 
 
