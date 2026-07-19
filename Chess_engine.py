@@ -286,6 +286,24 @@ def get_random_moves(board,color,en_passant_square=None,castling_rights=None):
           return None
      return random.choice(all_legal_moves)
 
+def  evalute_board(board):
+     piece_value={"P":1,
+                  "N":3,
+                  "B":3,
+                  "R":5,
+                  "Q":9,
+                  "K":0}
+     for i in range(0,8):
+          for j in range(0,8):
+               piece=board[i][j]
+               if piece !="--":
+                    value=piece_value[piece[1]]
+                    if(piece[0]=="w"):
+                        score=score+value
+                    else:
+                        score=score-value
+     return score
+
 
 
 
