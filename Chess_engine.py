@@ -304,9 +304,36 @@ def  evalute_board(board):
                         score=score-value
      return score
 
+def minimax(board,depth,is_maximising,en_passant_square,castling_rights):
+     if(depth==0):
+          return evalute_board(board)
+     if is_maximising==True:
+          bestscore=-999
+          color="w"
+     else:
+          bestscore=+999
+          color="b"
+     
+     for i in range(0,8):
+          for j in range(0,8):
+               piece=board[i][j]
+               if(piece=="--" or  piece[0] != color):
+                    continue
+               moves=get_legal_moves(board,i,j,color,en_passant_square,castling_rights)
+               for move in moves:
+                    (start_row, start_col, end_row, end_col) = move
+                    saved = board[end_row][end_col]
+                    board[end_row][end_col] = board[start_row][start_col]
+                    board[start_row][start_col] = "--"
+                    score = minimax(board, depth-1, not is_maximising, en_passant_square, castling_rights)
+                    board[start_row][start_col] = board[end_row][end_col]
+                    board[end_row][end_col] = saved
+                    if is_maximising:
+                        bestscore = max(bestscore, score)
+                    else:
+                        bestscore = min(bestscore, score)
+     return bestscore
 
 
-
-
-
-
+def get_best_moves(board, color, depth, en_passant_square=None, castling_rights=None):
+     pass

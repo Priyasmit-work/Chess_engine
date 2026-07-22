@@ -1,6 +1,6 @@
 import pygame as P
 import sys
-from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king,get_legal_moves,is_checkmate,is_stalemate,get_random_moves
+from Chess_engine import create_board,get_pawn_moves,get_rook_moves,get_bishop_moves,get_queen_moves,get_knight_moves,get_king_moves,get_all_moves,is_in_check,find_king,get_legal_moves,is_checkmate,is_stalemate,get_random_moves,get_best_moves
 
 WIDTH=512
 HEIGHT=512
