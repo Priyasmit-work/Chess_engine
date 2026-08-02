@@ -194,6 +194,7 @@ def get_all_moves(board,color,castling_rights):
 
 
 def is_in_check(board,color):
+    position=None
     for i in range(0,8):
         for j in range(0,8):
             piece=board[i][j]
@@ -293,6 +294,7 @@ def  evalute_board(board):
                   "R":5,
                   "Q":9,
                   "K":0}
+     score=0
      for i in range(0,8):
           for j in range(0,8):
                piece=board[i][j]
@@ -304,7 +306,7 @@ def  evalute_board(board):
                         score=score-value
      return score
 
-def minimax(board,depth,is_maximising,en_passant_square,castling_rights):
+def minimax(board,depth,is_maximising,en_passant_square,castling_rights,alpha,beta):
      if(depth==0):
           return evalute_board(board)
      if is_maximising==True:
@@ -325,15 +327,45 @@ def minimax(board,depth,is_maximising,en_passant_square,castling_rights):
                     saved = board[end_row][end_col]
                     board[end_row][end_col] = board[start_row][start_col]
                     board[start_row][start_col] = "--"
-                    score = minimax(board, depth-1, not is_maximising, en_passant_square, castling_rights)
+                    score = minimax(board, depth-1, not is_maximising, en_passant_square, castling_rights,alpha,beta)
                     board[start_row][start_col] = board[end_row][end_col]
                     board[end_row][end_col] = saved
                     if is_maximising:
                         bestscore = max(bestscore, score)
+                        alpha=max(alpha,bestscore)
                     else:
                         bestscore = min(bestscore, score)
+                        beta=min(bestscore,beta)
+                    if(alpha>=beta):
+                         break
      return bestscore
 
 
 def get_best_moves(board, color, depth, en_passant_square=None, castling_rights=None):
-     pass
+     best_move=None
+     if(color=='b'):
+          best_score=999
+     else:
+          best_score=-999
+     for i in range(0,8):
+          for j in range(0,8):
+               piece=board[i][j]
+               if(piece=="--" or  piece[0] != color):
+                    continue
+               moves=get_legal_moves(board,i,j,color,en_passant_square,castling_rights)
+               for move in moves:
+                    (start_row, start_col, end_row, end_col) = move
+                    saved = board[end_row][end_col]
+                    board[end_row][end_col] = board[start_row][start_col]
+                    board[start_row][start_col] = "--"
+                    score = minimax(board, depth-1,color=='w', en_passant_square, castling_rights,-999,999)
+                    board[start_row][start_col] = board[end_row][end_col]
+                    board[end_row][end_col] = saved
+                    if(color=='b' and score<best_score):
+                         best_score=score
+                         best_move=move
+                    if(color=='w' and score>best_score):
+                         best_score=score
+                         best_move=move
+     return best_move
+     

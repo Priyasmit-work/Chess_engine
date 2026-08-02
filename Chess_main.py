@@ -297,7 +297,7 @@ def main():
                         "black_queenside_rook_moved": False,
                     }
         if(track_turn==False and not game_over):
-            ai_move = get_random_moves(board, "b",en_passant_square,castling_rights)
+            ai_move = get_best_moves(board, "b",2,en_passant_square,castling_rights)
             if ai_move is not None:
                 (start_row, start_col, end_row, end_col) = ai_move
                 piece=board[start_row][start_col]
