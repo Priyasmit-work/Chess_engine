@@ -238,6 +238,7 @@ def get_legal_moves(board,row,col,color,en_passant_square=None,castling_rights=N
 
 
 def find_king(board,color):
+     position=None
      for i in range(0,8):
         for j in range(0,8):
             piece=board[i][j]

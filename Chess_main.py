@@ -111,6 +111,21 @@ def draw_game_over(screen, message, font):
     screen.blit(text, (text_x, text_y))
     screen.blit(restart, (restart_x, restart_y))
 
+def draw_start_screen(screen):
+    screen.fill((49,46,43))
+    big_font=P.font.SysFont("Arial",42,bold=True)
+    med_font=P.font.SysFont("Arial",22)
+    small_font=P.font.SysFont("Arial",18)
+
+    title  = big_font.render("Chess Engine",         True, (255, 255, 255))
+    choose = med_font.render("Choose your color:",   True, (200, 200, 200))
+    white  = small_font.render("W  —  Play as White", True, (240, 217, 181))
+    black  = small_font.render("B  —  Play as Black", True, (150, 150, 150))
+    screen.blit(title,  (WIDTH//2 - title.get_width()//2,  HEIGHT//2 - 100))
+    screen.blit(choose, (WIDTH//2 - choose.get_width()//2, HEIGHT//2 - 20))
+    screen.blit(white,  (WIDTH//2 - white.get_width()//2,  HEIGHT//2 + 30))
+    screen.blit(black,  (WIDTH//2 - black.get_width()//2,  HEIGHT//2 + 70))
+
     
 
 
@@ -142,6 +157,24 @@ def main():
     promotion_color=False
     game_over=False
     game_over_message=""
+    player_color=None
+    ai_color=None
+
+    while player_color is None:
+        for event in P.event.get():
+            if event.type == P.QUIT:
+                P.quit()
+                sys.exit()
+            if event.type == P.KEYDOWN:
+                if event.key == P.K_w:
+                    player_color = "w"
+                    ai_color = "b"
+                if event.key == P.K_b:
+                    player_color = "b"
+                    ai_color = "w"
+        draw_start_screen(screen)
+        P.display.flip()
+        clock.tick(FPS)
 
 
     while True:
@@ -175,19 +208,21 @@ def main():
                 col=X//SQ_SIZE
                 click=(row,col)
                 click_history_list.append(click)
+
+                #---------------------------------1st Click---------------------------
                 if(len(click_history_list)==1):
                     piece=board[row][col]
                     if(piece=="--"):
                         click_history_list=[]
                     else:
                         current_selected=click
-                        if((track_turn==True and piece[0]=="w") or track_turn==False and piece[0]=="b"):
+                        if piece[0]==player_color and ((track_turn==True and player_color=="w") or track_turn==False and player_color=="b"):
                             current_selected=click
                             valid_moves = get_legal_moves(board, row, col, piece[0],en_passant_square,castling_rights)
                         else:
                             click_history_list=[]
                             current_selected=None
-
+                #------------------2nd Click-----------------------------------------
                 if(len(click_history_list)==2):
                     (row_0,col_0)=click_history_list[0]
                     (row_1,col_1)=click_history_list[1]
@@ -288,6 +323,8 @@ def main():
                     game_over_message = ""
                     promotion_pending = False
                     promotion_color = None
+                    ai_color=None
+                    player_color=None
                     castling_rights = {
                         "white_king_moved"          : False,
                         "white_kingside_rook_moved" : False,
@@ -296,8 +333,24 @@ def main():
                         "black_kingside_rook_moved" : False,
                         "black_queenside_rook_moved": False,
                     }
-        if(track_turn==False and not game_over):
-            ai_move = get_best_moves(board, "b",2,en_passant_square,castling_rights)
+                    while player_color is None:
+                        for event in P.event.get():
+                            if event.type == P.QUIT:
+                                P.quit()
+                                sys.exit()
+                            if event.type == P.KEYDOWN:
+                                if event.key == P.K_w:
+                                    player_color = "w"
+                                    ai_color = "b"
+                                if event.key == P.K_b:
+                                    player_color = "b"
+                                    ai_color = "w"
+                        draw_start_screen(screen)
+                        P.display.flip()
+                        clock.tick(FPS)
+        ai_turn=((track_turn==False and ai_color=="b") or (track_turn==True and ai_color=="w"))
+        if(ai_turn  and not game_over and not promotion_pending):
+            ai_move = get_best_moves(board,ai_color,2,en_passant_square,castling_rights)
             if ai_move is not None:
                 (start_row, start_col, end_row, end_col) = ai_move
                 piece=board[start_row][start_col]
@@ -319,7 +372,7 @@ def main():
 
                 # pawn promotion - auto queen for AI
                 if piece[1] == "P" and end_row == 7:
-                    board[end_row][end_col] = "bQ"
+                    board[end_row][end_col] = ai_color+"Q"
 
                 # update en passant
                 if piece[1] == "P" and abs(end_row - start_row) == 2:
@@ -339,16 +392,16 @@ def main():
                 track_turn = True
 
                 # check detection
-                if is_in_check(board, "w"):
-                    in_check_position = find_king(board, "w")
+                if is_in_check(board,player_color):
+                    in_check_position = find_king(board, player_color)
                 else:
                     in_check_position = None
 
                 # checkmate and stalemate
-                if is_checkmate(board, "w"):
+                if is_checkmate(board, player_color):
                     game_over = True
-                    game_over_message = "Black Wins by Checkmate!"
-                elif is_stalemate(board, "w"):
+                    game_over_message = "AI  Wins by Checkmate!"
+                elif is_stalemate(board, player_color):
                     game_over = True
                     game_over_message = "Stalemate! Draw!"
         
